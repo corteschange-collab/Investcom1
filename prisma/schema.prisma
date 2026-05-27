@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String    @id @default(cuid())
+  clerkId         String    @unique
+  email           String    @unique
+  name            String?
+  plan            Plan      @default(FREE)
+  investorProfile String?   // ProfileId from lib/quiz/engine.ts
+  quizScores      Json?     // { conservadorismo, seguranca, ... } raw quiz scores
+  quizCompletedAt DateTime?
+  firstTicker     String?   // first asset the user added during onboarding
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  watchlists  Watchlist[]
+  alerts      Alert[]
+  alertLogs   AlertLog[]
+  tickets     SupportTicket[]
+
+  @@index([clerkId])
+}
+
+// ─── Watchlist ───────────────────────────────────────────────────────────────
+
+model Watchlist {
+  id        String          @id @default(cuid())
+  name      String          @default("Minha Watchlist")
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WatchlistItem[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([userId])
+}
+
+model WatchlistItem {
+  id          String    @id @default(cuid())
+  ticker      String
+  notes       String?
+  addedAt     DateTime  @default(now())
+  watchlistId String
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+
+  @@unique([watchlistId, ticker])
+  @@index([watchlistId])
+}
+
+// ─── Alerts ──────────────────────────────────────────────────────────────────
+
+model Alert {
+  id          String    @id @default(cuid())
+  userId      String
+  ticker      String
+  type        AlertType
+  value       Float
+  active      Boolean   @default(true)
+  triggeredAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs AlertLog[]
+
+  @@index([userId])
+  @@index([ticker, active]) // for the alert evaluation job
+}
+
+model AlertLog {
+  id          String   @id @default(cuid())
+  alertId     String
+  userId      String
+  ticker      String
+  triggerValue Float   // actual value that triggered the alert
+  message     String
+  triggeredAt DateTime @default(now())
+
+  alert Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([alertId])
+  @@index([userId])
+}
+
+// ─── Support ─────────────────────────────────────────────────────────────────
+
+model SupportTicket {
+  id         String       @id @default(cuid())
+  ticketCode String       @unique // e.g. INV-ABC123
+  userId     String?      // null for unauthenticated contact
+  email      String
+  name       String
+  category   String       // bug | dados | conta | feedback | comercial | outros
+  subject    String
+  message    String       @db.Text
+  ticker     String?      // context for "dados" category
+  priority   String       @default("normal") // normal | urgente
+  status     TicketStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Plan {
+  FREE
+  PREMIUM
+  ENTERPRISE
+}
+
+enum AlertType {
+  PRICE_ABOVE
+  PRICE_BELOW
+  RSI_ABOVE
+  RSI_BELOW
+  VOLUME_SPIKE
+  TREND_CHANGE
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
