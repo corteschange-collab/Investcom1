@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useSignIn } from "@clerk/nextjs";
+import { useSignIn, useSignUp } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, ArrowRight, TrendingUp, Eye, EyeOff, Loader2 } from "lucide-react";
+import { X, Mail, ArrowRight, TrendingUp, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -12,7 +13,25 @@ interface Props {
   onClose: () => void;
 }
 
-type Mode = "options" | "email-login" | "email-register";
+type Mode = "options" | "email-login" | "email-register" | "verify";
+
+function clerkError(err: unknown): string {
+  if (!err) return "Algo deu errado. Tente novamente.";
+  const e = err as { code?: string; message?: string };
+  const map: Record<string, string> = {
+    form_identifier_not_found: "E-mail não encontrado. Verifique ou crie uma conta.",
+    form_password_incorrect: "Senha incorreta. Tente novamente.",
+    form_param_format_invalid: "E-mail inválido. Verifique o formato.",
+    session_exists: "Você já está autenticado.",
+    too_many_requests: "Muitas tentativas. Aguarde alguns minutos.",
+    form_code_incorrect: "Código inválido. Verifique e tente novamente.",
+    verification_expired: "Código expirado. Reenvie um novo.",
+    form_identifier_exists: "Este e-mail já está cadastrado. Faça login.",
+    form_password_pwned: "Esta senha foi comprometida em vazamentos. Use outra.",
+    form_password_length_too_short: "A senha precisa ter pelo menos 8 caracteres.",
+  };
+  return map[e.code ?? ""] ?? e.message ?? "Algo deu errado. Tente novamente.";
+}
 
 function GoogleIcon() {
   return (
@@ -26,27 +45,104 @@ function GoogleIcon() {
 }
 
 export function LoginModal({ open, onClose }: Props) {
+  const router = useRouter();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
+
   const [mode, setMode] = useState<Mode>("options");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const { signIn } = useSignIn();
-
-  const reset = () => { setMode("options"); setEmail(""); setPassword(""); };
+  const reset = () => {
+    setMode("options");
+    setName(""); setEmail(""); setPassword(""); setCode("");
+    setLoading(false); setError("");
+  };
   const handleClose = () => { reset(); onClose(); };
 
+  /* ── Google OAuth ─────────────────────────────── */
   const handleGoogle = useCallback(async () => {
     if (!signIn) return;
-    setGoogleLoading(true);
+    setLoading(true);
     const { error: ssoError } = await signIn.sso({
       strategy: "oauth_google",
       redirectUrl: "/sso-callback",
       redirectCallbackUrl: "/dashboard",
     });
-    if (ssoError) setGoogleLoading(false);
+    if (ssoError) { setError(clerkError(ssoError)); setLoading(false); }
   }, [signIn]);
+
+  /* ── Email sign-in ────────────────────────────── */
+  const handleSignIn = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!signIn) return;
+    setLoading(true); setError("");
+
+    const { error: createError } = await signIn.create({ identifier: email });
+    if (createError) { setError(clerkError(createError)); setLoading(false); return; }
+
+    const { error: passError } = await signIn.password({ password });
+    if (passError) { setError(clerkError(passError)); setLoading(false); return; }
+
+    if (signIn.status === "complete") {
+      const { error: finalError } = await signIn.finalize();
+      if (finalError) { setError(clerkError(finalError)); setLoading(false); return; }
+      handleClose();
+      router.push("/dashboard");
+    } else {
+      setError("Algo deu errado. Tente novamente.");
+      setLoading(false);
+    }
+  }, [signIn, email, password, router]);
+
+  /* ── Email sign-up ────────────────────────────── */
+  const handleSignUp = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!signUp) return;
+    setLoading(true); setError("");
+
+    const [firstName, ...rest] = name.trim().split(" ");
+    const { error: createError } = await signUp.create({
+      emailAddress: email,
+      firstName,
+      lastName: rest.join(" ") || undefined,
+    });
+    if (createError) { setError(clerkError(createError)); setLoading(false); return; }
+
+    const { error: passError } = await signUp.password({ password });
+    if (passError) { setError(clerkError(passError)); setLoading(false); return; }
+
+    const { error: sendError } = await signUp.verifications.sendEmailCode();
+    if (sendError) { setError(clerkError(sendError)); setLoading(false); return; }
+
+    setMode("verify");
+    setLoading(false);
+  }, [signUp, name, email, password]);
+
+  /* ── Verify email code ────────────────────────── */
+  const handleVerify = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!signUp) return;
+    setLoading(true); setError("");
+
+    const { error: verifyError } = await signUp.verifications.verifyEmailCode({ code });
+    if (verifyError) { setError(clerkError(verifyError)); setLoading(false); return; }
+
+    if (signUp.status === "complete") {
+      const { error: finalError } = await signUp.finalize();
+      if (finalError) { setError(clerkError(finalError)); setLoading(false); return; }
+      handleClose();
+      router.push("/onboarding");
+    } else {
+      setError("Algo deu errado. Tente novamente.");
+      setLoading(false);
+    }
+  }, [signUp, code, router]);
 
   return (
     <AnimatePresence>
@@ -88,6 +184,8 @@ export function LoginModal({ open, onClose }: Props) {
 
               <div className="p-6 pt-5">
                 <AnimatePresence mode="wait">
+
+                  {/* ── Options screen ── */}
                   {mode === "options" && (
                     <motion.div
                       key="options"
@@ -101,13 +199,12 @@ export function LoginModal({ open, onClose }: Props) {
                         Crie sua conta grátis e comece a analisar o mercado agora.
                       </p>
 
-                      {/* Google */}
                       <button
                         onClick={handleGoogle}
-                        disabled={googleLoading || !signIn}
+                        disabled={loading || !signIn}
                         className="flex w-full items-center justify-center gap-3 rounded-xl border border-border/60 bg-background px-4 py-3 text-sm font-medium hover:bg-muted/60 transition-all active:scale-[0.98] disabled:opacity-50"
                       >
-                        {googleLoading ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
+                        {loading ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
                         Continuar com Google
                       </button>
 
@@ -117,7 +214,6 @@ export function LoginModal({ open, onClose }: Props) {
                         <div className="flex-1 h-px bg-border/50" />
                       </div>
 
-                      {/* Email options */}
                       <div className="space-y-2">
                         <button
                           onClick={() => setMode("email-register")}
@@ -141,77 +237,160 @@ export function LoginModal({ open, onClose }: Props) {
                     </motion.div>
                   )}
 
-                  {(mode === "email-login" || mode === "email-register") && (
+                  {/* ── Email login ── */}
+                  {mode === "email-login" && (
                     <motion.div
-                      key={mode}
+                      key="email-login"
                       initial={{ opacity: 0, x: 12 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -12 }}
                       transition={{ duration: 0.18 }}
-                      className="space-y-4"
                     >
-                      <div>
-                        <button
-                          onClick={() => setMode("options")}
-                          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-3 transition-colors"
-                        >
-                          ← Voltar
-                        </button>
-                        <h2 className="text-lg font-bold">
-                          {mode === "email-register" ? "Criar sua conta" : "Entrar na sua conta"}
-                        </h2>
-                      </div>
+                      <button
+                        onClick={() => { setMode("options"); setError(""); }}
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-3 transition-colors"
+                      >
+                        ← Voltar
+                      </button>
+                      <h2 className="text-lg font-bold mb-4">Entrar na sua conta</h2>
 
-                      {mode === "email-register" && (
+                      <form onSubmit={handleSignIn} className="space-y-3">
                         <div>
-                          <label className="text-xs text-muted-foreground mb-1.5 block">Nome completo</label>
-                          <Input placeholder="Seu nome" className="h-10 bg-background border-border/60" />
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1.5 block">E-mail</label>
-                        <Input
-                          type="email"
-                          placeholder="seu@email.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="h-10 bg-background border-border/60"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-1.5 block">Senha</label>
-                        <div className="relative">
+                          <label className="text-xs text-muted-foreground mb-1.5 block">E-mail</label>
                           <Input
-                            type={showPass ? "text" : "password"}
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="h-10 bg-background border-border/60 pr-10"
+                            type="email" placeholder="seu@email.com" value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="h-10 bg-background border-border/60"
+                            required autoComplete="email"
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowPass(!showPass)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          >
-                            {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
-                          </button>
                         </div>
-                      </div>
-
-                      <Button className="w-full h-10 bg-primary hover:bg-primary/90 font-semibold gap-2">
-                        <Mail size={15} />
-                        {mode === "email-register" ? "Criar conta grátis" : "Entrar"}
-                      </Button>
-
-                      {mode === "email-login" && (
-                        <p className="text-center text-xs text-muted-foreground">
-                          <button className="text-primary hover:underline">Esqueceu sua senha?</button>
-                        </p>
-                      )}
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1.5 block">Senha</label>
+                          <div className="relative">
+                            <Input
+                              type={showPass ? "text" : "password"} placeholder="••••••••"
+                              value={password} onChange={(e) => setPassword(e.target.value)}
+                              className="h-10 bg-background border-border/60 pr-10"
+                              required autoComplete="current-password"
+                            />
+                            <button type="button" onClick={() => setShowPass(!showPass)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                              {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
+                        </div>
+                        {error && <ErrorMsg>{error}</ErrorMsg>}
+                        <Button type="submit" disabled={loading} className="w-full h-10 bg-primary hover:bg-primary/90 font-semibold gap-2">
+                          {loading ? <Loader2 size={15} className="animate-spin" /> : <><Mail size={15} /> Entrar</>}
+                        </Button>
+                      </form>
                     </motion.div>
                   )}
+
+                  {/* ── Email register ── */}
+                  {mode === "email-register" && (
+                    <motion.div
+                      key="email-register"
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -12 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <button
+                        onClick={() => { setMode("options"); setError(""); }}
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 mb-3 transition-colors"
+                      >
+                        ← Voltar
+                      </button>
+                      <h2 className="text-lg font-bold mb-4">Criar sua conta</h2>
+
+                      <form onSubmit={handleSignUp} className="space-y-3">
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1.5 block">Nome completo</label>
+                          <Input
+                            placeholder="Seu nome" value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="h-10 bg-background border-border/60"
+                            required autoComplete="name"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1.5 block">E-mail</label>
+                          <Input
+                            type="email" placeholder="seu@email.com" value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="h-10 bg-background border-border/60"
+                            required autoComplete="email"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1.5 block">Senha</label>
+                          <div className="relative">
+                            <Input
+                              type={showPass ? "text" : "password"} placeholder="mínimo 8 caracteres"
+                              value={password} onChange={(e) => setPassword(e.target.value)}
+                              className="h-10 bg-background border-border/60 pr-10"
+                              required minLength={8} autoComplete="new-password"
+                            />
+                            <button type="button" onClick={() => setShowPass(!showPass)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                              {showPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
+                        </div>
+                        {error && <ErrorMsg>{error}</ErrorMsg>}
+                        <Button type="submit" disabled={loading} className="w-full h-10 bg-primary hover:bg-primary/90 font-semibold gap-2">
+                          {loading ? <Loader2 size={15} className="animate-spin" /> : <><Mail size={15} /> Criar conta grátis</>}
+                        </Button>
+                      </form>
+                    </motion.div>
+                  )}
+
+                  {/* ── Email verification ── */}
+                  {mode === "verify" && (
+                    <motion.div
+                      key="verify"
+                      initial={{ opacity: 0, x: 12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -12 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <div className="text-center mb-5">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                          <CheckCircle size={24} />
+                        </div>
+                        <h2 className="text-lg font-bold">Confirme seu e-mail</h2>
+                        <p className="mt-1.5 text-sm text-muted-foreground">
+                          Enviamos um código de 6 dígitos para <strong>{email}</strong>
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleVerify} className="space-y-3">
+                        <Input
+                          placeholder="000000" value={code}
+                          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          className="h-12 bg-background border-border/60 text-center text-xl font-mono tracking-widest"
+                          maxLength={6} required autoComplete="one-time-code"
+                        />
+                        {error && <ErrorMsg>{error}</ErrorMsg>}
+                        <Button type="submit" disabled={loading || code.length < 6}
+                          className="w-full h-10 bg-primary hover:bg-primary/90 font-semibold gap-2">
+                          {loading ? <Loader2 size={15} className="animate-spin" /> : <>Verificar e continuar <ArrowRight size={15} /></>}
+                        </Button>
+                      </form>
+
+                      <p className="mt-4 text-center text-xs text-muted-foreground">
+                        Não recebeu?{" "}
+                        <button
+                          onClick={async () => { if (signUp) await signUp.verifications.sendEmailCode(); }}
+                          className="text-primary hover:underline"
+                        >
+                          Reenviar código
+                        </button>
+                      </p>
+                    </motion.div>
+                  )}
+
                 </AnimatePresence>
               </div>
             </div>
@@ -219,5 +398,13 @@ export function LoginModal({ open, onClose }: Props) {
         </>
       )}
     </AnimatePresence>
+  );
+}
+
+function ErrorMsg({ children }: { children: string }) {
+  return (
+    <p className="flex items-center gap-1.5 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-xs text-destructive">
+      <span className="shrink-0">⚠</span> {children}
+    </p>
   );
 }

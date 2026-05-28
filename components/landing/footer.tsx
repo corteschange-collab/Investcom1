@@ -19,9 +19,9 @@ export function LandingFooter() {
           </p>
 
           <div className="flex gap-4 text-xs text-muted-foreground">
-            <Link href="#" className="hover:text-foreground transition-colors">Termos</Link>
-            <Link href="#" className="hover:text-foreground transition-colors">Privacidade</Link>
-            <Link href="#" className="hover:text-foreground transition-colors">Contato</Link>
+            <Link href="/termos" className="hover:text-foreground transition-colors">Termos</Link>
+            <Link href="/privacidade" className="hover:text-foreground transition-colors">Privacidade</Link>
+            <Link href="/contato" className="hover:text-foreground transition-colors">Contato</Link>
           </div>
         </div>
 

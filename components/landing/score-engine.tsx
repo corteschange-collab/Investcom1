@@ -13,7 +13,8 @@ const DIMENSIONS = [
 // SVG donut segment calculator
 function polarToCartesian(cx: number, cy: number, r: number, angle: number) {
   const rad = ((angle - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  const round = (n: number) => Math.round(n * 1e5) / 1e5;
+  return { x: round(cx + r * Math.cos(rad)), y: round(cy + r * Math.sin(rad)) };
 }
 
 function arcPath(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
