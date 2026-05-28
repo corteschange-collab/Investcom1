@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Variação C — Editorial Refinado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* ─── Variação C: Editorial Refinado (Modo Claro) ─── */
+      --bg:         #F3EDE0;   /* Creme/parchment — Financial Times */
+      --bg-surface: #EDE5D5;   /* Pergaminho card */
+      --bg-card:    #E8DDD0;   /* Levemente mais escuro */
+      --border:     #C8BAA8;   /* Borda quente */
+      --border-hi:  #A89888;   /* Hover */
+      --fg:         #1C1208;   /* Quase preto — marrom profundo */
+      --fg-muted:   #7A6E5E;   /* Cinza quente */
+      --fg-dim:     #B0A498;   /* Terciário */
+      --primary:    #8C1F3F;   /* Bordeaux/burgúndia */
+      --primary-20: #8C1F3F33;
+      --primary-10: #8C1F3F14;
+      --primary-hi: #A8354F;   /* Bordeaux claro */
+      --green:      #2D6A3C;   /* Verde floresta */
+      --green-15:   #2D6A3C22;
+      --red:        #8C2A1F;   /* Vermelho terracota */
+      --red-15:     #8C2A1F22;
+      --yellow:     #9B6E15;   /* Âmbar terroso */
+      --yellow-15:  #9B6E1522;
+      --gold:       #8C1F3F;
+      --gold-muted: #8C1F3F10;
+
+      --font-display: 'Fraunces', serif;
+      --font-sans:    'Syne', sans-serif;
+      --font-mono:    'JetBrains Mono', monospace;
+    }
+
+    html { font-family: var(--font-sans); background: var(--bg); color: var(--fg); }
+    h1, h2, h3 { font-family: var(--font-display); }
+
+    /* Grain texture for parchment feel */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: .6;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @keyframes barFill { from { width: 0; } }
+    @keyframes pulse { 50% { opacity: .3; } }
+
+    .anim-1 { animation: fadeUp .65s cubic-bezier(0.22,1,0.36,1) .08s both; }
+    .anim-2 { animation: fadeUp .65s cubic-bezier(0.22,1,0.36,1) .22s both; }
+    .anim-3 { animation: fadeUp .65s cubic-bezier(0.22,1,0.36,1) .38s both; }
+    .anim-4 { animation: fadeUp .65s cubic-bezier(0.22,1,0.36,1) .54s both; }
+    .anim-5 { animation: fadeUp .65s cubic-bezier(0.22,1,0.36,1) .70s both; }
+    .anim-6 { animation: fadeUp .65s cubic-bezier(0.22,1,0.36,1) .86s both; }
+
+    /* ── Navbar ── */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem; height: 62px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.15rem; font-weight: 700; letter-spacing: -.02em;
+      color: var(--fg);
+    }
+    .nav-logo span { color: var(--primary); }
+    .nav-links { display: flex; gap: 2.5rem; font-size: .78rem; color: var(--fg-muted); }
+    .nav-links a { text-decoration: none; color: inherit; }
+    .nav-cta {
+      padding: .45rem 1.2rem; border-radius: 6px;
+      background: var(--primary); color: #F3EDE0; font-size: .78rem;
+      font-weight: 700; border: none; cursor: pointer;
+      font-family: var(--font-sans); letter-spacing: .02em;
+    }
+
+    /* Horizontal rule divider (editorial) */
+    .editorial-rule {
+      height: 1px; background: var(--border); margin: 0;
+    }
+    .editorial-rule-bold {
+      height: 2px; background: var(--fg); max-width: 1200px; margin: 0 auto;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      max-width: 1200px; margin: 0 auto;
+      padding: 5rem 2.5rem 4rem;
+    }
+
+    /* Editorial label line */
+    .editorial-label {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .label-rule { flex: 1; height: 1px; background: var(--border); max-width: 60px; }
+    .label-text {
+      font-size: .68rem; font-weight: 700; letter-spacing: .15em;
+      color: var(--primary); text-transform: uppercase; font-family: var(--font-mono);
+    }
+
+    .hero-content {
+      display: grid; grid-template-columns: 1fr 420px;
+      gap: 5rem; align-items: start;
+    }
+    @media (max-width: 900px) {
+      .hero-content { grid-template-columns: 1fr; }
+      .hero-widget { display: none; }
+    }
+
+    h1 {
+      font-size: clamp(2.8rem, 6vw, 4.4rem);
+      font-weight: 700; line-height: 1.05; letter-spacing: -.035em;
+      color: var(--fg); margin-bottom: 1.8rem;
+    }
+    .h1-italic {
+      font-style: italic; color: var(--primary);
+      position: relative; display: inline-block;
+    }
+    .h1-italic::after {
+      content: '';
+      position: absolute; bottom: -2px; left: 0; right: 0; height: 2px;
+      background: var(--primary); opacity: .4;
+      transform-origin: left;
+      animation: scaleX .7s cubic-bezier(0.22,1,0.36,1) .9s both;
+    }
+
+    .hero-sub {
+      font-size: .9rem; color: var(--fg-muted); line-height: 1.8;
+      max-width: 500px; margin-bottom: 2.5rem;
+      border-left: 2px solid var(--primary); padding-left: 1rem;
+    }
+
+    .props-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: .6rem; margin-bottom: 2.5rem;
+    }
+    .prop-card {
+      border: 1px solid var(--border); background: var(--bg-surface);
+      border-radius: 8px; padding: .8rem;
+      display: flex; align-items: flex-start; gap: .6rem;
+    }
+    .prop-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: var(--primary-10); border: 1px solid var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; color: var(--primary); flex-shrink: 0;
+    }
+    .prop-label { font-size: .7rem; font-weight: 700; color: var(--fg); }
+    .prop-sub   { font-size: .63rem; color: var(--fg-muted); margin-top: 2px; }
+
+    .cta-row { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .75rem 1.6rem; border-radius: 7px;
+      background: var(--primary); color: var(--bg);
+      font-family: var(--font-sans); font-weight: 700; font-size: .82rem;
+      border: none; cursor: pointer;
+    }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .75rem 1.6rem; border-radius: 7px;
+      background: transparent; color: var(--fg-muted);
+      font-family: var(--font-sans); font-weight: 600; font-size: .82rem;
+      border: 1px solid var(--border); cursor: pointer;
+    }
+
+    .tickers { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .ticker-pill {
+      display: flex; align-items: center; gap: .4rem;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--bg-surface); padding: .3rem .65rem;
+    }
+    .ticker-sym { font-family: var(--font-mono); font-size: .65rem; color: var(--fg-muted); font-weight: 700; }
+    .ticker-price { font-family: var(--font-mono); font-size: .65rem; color: var(--fg); }
+    .ticker-chg-pos { font-size: .6rem; font-weight: 700; color: var(--green); }
+    .ticker-chg-neg { font-size: .6rem; font-weight: 700; color: var(--red); }
+
+    /* ── Widget (editorial card style) ── */
+    .hero-widget {
+      border-radius: 14px; overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      box-shadow: 4px 8px 32px rgba(28,18,8,.12);
+      margin-top: 1rem;
+    }
+    .widget-chrome {
+      display: flex; align-items: center; gap: .5rem;
+      padding: .65rem 1rem; border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+    .wdot { width: 9px; height: 9px; border-radius: 50%; }
+    .widget-title { margin-left: .4rem; font-family: var(--font-mono); font-size: .6rem; color: var(--fg-muted); }
+    .live-badge { margin-left: auto; display: flex; align-items: center; gap: .3rem; font-size: .58rem; font-weight: 700; color: var(--green); font-family: var(--font-mono); }
+    .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+
+    .widget-body { padding: 1.2rem; }
+    .widget-ticker { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: .8rem; }
+    .widget-sym { font-family: var(--font-mono); font-weight: 800; font-size: .82rem; color: var(--fg); }
+    .widget-score {
+      background: var(--primary-10); border: 1px solid var(--primary);
+      border-radius: 5px; padding: .12rem .45rem;
+      font-size: .62rem; font-weight: 700; color: var(--primary); font-family: var(--font-mono);
+    }
+    .widget-price { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; letter-spacing: -.03em; color: var(--fg); }
+    .widget-chg { font-size: .75rem; font-weight: 700; color: var(--green); margin-left: .35rem; }
+    .widget-name { font-size: .62rem; color: var(--fg-muted); margin-top: 2px; }
+
+    .mini-chart {
+      height: 68px; border-radius: 8px;
+      border: 1px solid var(--border); margin-bottom: .8rem;
+      display: flex; align-items: flex-end; padding: 0 6px 4px; gap: 3px;
+      background: var(--bg-card);
+    }
+    .chart-bar { flex: 1; border-radius: 1px 1px 0 0; background: var(--green); opacity: .55; }
+
+    .indicator-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; margin-bottom: .75rem; }
+    .ind-card { border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border); padding: .5rem; text-align: center; }
+    .ind-label { font-size: .6rem; color: var(--fg-muted); }
+    .ind-val   { font-family: var(--font-mono); font-size: .72rem; font-weight: 700; color: var(--fg); }
+    .ind-sig   { font-size: .6rem; font-weight: 700; margin-top: 2px; }
+
+    .scenarios { margin-bottom: .75rem; }
+    .scenario-row { display: flex; align-items: center; gap: .55rem; margin-bottom: .4rem; }
+    .scenario-label { font-size: .62rem; color: var(--fg-muted); width: 86px; flex-shrink: 0; }
+    .scenario-bar { flex: 1; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .scenario-fill { height: 100%; border-radius: 2px; animation: barFill 1.1s cubic-bezier(0.22,1,0.36,1) 1s both; }
+    .scenario-pct { font-family: var(--font-mono); font-size: .62rem; font-weight: 700; width: 26px; text-align: right; }
+
+    .ai-card {
+      border-radius: 8px; background: var(--primary-10); border: 1px solid var(--border);
+      padding: .65rem; display: flex; gap: .55rem;
+    }
+    .ai-avatar {
+      width: 22px; height: 22px; border-radius: 5px; background: var(--primary-10);
+      border: 1px solid var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .52rem; font-weight: 800; color: var(--primary); font-family: var(--font-mono); flex-shrink: 0;
+    }
+    .ai-text { font-size: .63rem; color: var(--fg-muted); line-height: 1.65; }
+
+    /* ── Score Section ── */
+    .score-section { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 5rem 0; }
+    .score-inner { max-width: 1200px; margin: 0 auto; padding: 0 2.5rem; }
+
+    .score-header { margin-bottom: 3.5rem; }
+    .section-tag { font-size: .68rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--primary); font-family: var(--font-mono); }
+    .score-header h2 { font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 700; letter-spacing: -.035em; margin-top: .6rem; line-height: 1.1; }
+    .score-header p { font-size: .88rem; color: var(--fg-muted); max-width: 500px; margin-top: .7rem; line-height: 1.75; }
+
+    .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4.5rem; align-items: center; }
+    @media (max-width: 800px) { .score-grid { grid-template-columns: 1fr; gap: 2.5rem; } }
+
+    .donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; }
+    .donut-svg-wrap { position: relative; }
+    .donut-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .donut-label-title { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; letter-spacing: -.03em; color: var(--fg); font-style: italic; }
+    .donut-label-sub { font-size: .7rem; color: var(--fg-muted); }
+
+    .confidence-row { display: flex; gap: .7rem; }
+    .conf-badge { border-radius: 8px; padding: .45rem .8rem; text-align: center; border: 1px solid var(--border); }
+    .conf-range { font-size: .72rem; font-weight: 800; font-family: var(--font-mono); }
+    .conf-sub   { font-size: .6rem; color: var(--fg-muted); margin-top: 2px; }
+
+    .dim-list { display: flex; flex-direction: column; gap: .9rem; }
+    .dim-card { border-radius: 12px; border: 1px solid var(--border); background: var(--bg-surface); padding: 1.1rem; }
+    .dim-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .7rem; }
+    .dim-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dim-name { font-size: .82rem; font-weight: 600; margin-left: .7rem; color: var(--fg); }
+    .dim-pct { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; font-style: italic; }
+    .dim-bar-track { height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; }
+    .dim-bar-fill { height: 100%; border-radius: 2px; animation: barFill 1s cubic-bezier(0.22,1,0.36,1) 1.2s both; }
+    .dim-desc { font-size: .68rem; color: var(--fg-muted); margin-top: .5rem; }
+
+    /* Palette ref */
+    .palette-info { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem 2rem; max-width: 1200px; margin: 2rem auto; }
+    .palette-title { font-size: .65rem; font-family: var(--font-mono); color: var(--fg-muted); margin-bottom: 1rem; letter-spacing: .12em; text-transform: uppercase; }
+    .swatches { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .swatch { display: flex; flex-direction: column; align-items: center; gap: .3rem; }
+    .swatch-color { width: 34px; height: 34px; border-radius: 6px; border: 1px solid var(--border); }
+    .swatch-hex { font-family: var(--font-mono); font-size: .58rem; color: var(--fg-muted); }
+    .swatch-name { font-size: .58rem; color: var(--fg-dim); }
+  </style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════ -->
+<nav>
+  <div class="nav-logo">Invest<span>AI</span></div>
+  <div class="nav-links">
+    <a href="#">Plataforma</a>
+    <a href="#">Score</a>
+    <a href="#">Preços</a>
+  </div>
+  <button class="nav-cta">Entrar</button>
+</nav>
+
+<div class="editorial-rule"></div>
+
+<!-- ══ HERO ════════════════════════════════ -->
+<section class="hero">
+  <div class="editorial-label anim-1">
+    <div class="label-rule"></div>
+    <div class="label-text">Plataforma de análise · investidores brasileiros</div>
+    <div class="label-rule"></div>
+  </div>
+
+  <div class="hero-content">
+    <div>
+      <h1 class="anim-2">
+        Inteligência<br>que <span class="h1-italic">informa</span><br>decisões reais.
+      </h1>
+
+      <p class="hero-sub anim-3">
+        Score proprietário, 10 indicadores técnicos e análise probabilística
+        com 3 cenários — calculados em tempo real, explicados em português,
+        para qualquer nível de investidor.
+      </p>
+
+      <div class="props-grid anim-4">
+        <div class="prop-card">
+          <div class="prop-icon">⚡</div>
+          <div>
+            <div class="prop-label">Dados B3 ao vivo</div>
+            <div class="prop-sub">Atualização em 30s</div>
+          </div>
+        </div>
+        <div class="prop-card">
+          <div class="prop-icon">◆</div>
+          <div>
+            <div class="prop-label">IA explicativa</div>
+            <div class="prop-sub">Em português claro</div>
+          </div>
+        </div>
+        <div class="prop-card">
+          <div class="prop-icon">◎</div>
+          <div>
+            <div class="prop-label">Score 0–100</div>
+            <div class="prop-sub">4 dimensões</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-row anim-5">
+        <button class="btn-primary">Começar gratuitamente →</button>
+        <button class="btn-outline">Ver plataforma ao vivo</button>
+      </div>
+
+      <div class="tickers anim-6">
+        <div class="ticker-pill">
+          <span class="ticker-sym">PETR4</span>
+          <span class="ticker-price">38,42</span>
+          <span class="ticker-chg-pos">↑ +2,14%</span>
+        </div>
+        <div class="ticker-pill">
+          <span class="ticker-sym">VALE3</span>
+          <span class="ticker-price">67,80</span>
+          <span class="ticker-chg-neg">↓ −0,92%</span>
+        </div>
+        <div class="ticker-pill">
+          <span class="ticker-sym">MXRF11</span>
+          <span class="ticker-price">10,18</span>
+          <span class="ticker-chg-pos">↑ +0,69%</span>
+        </div>
+        <div class="ticker-pill">
+          <span class="ticker-sym">BOVA11</span>
+          <span class="ticker-price">125,40</span>
+          <span class="ticker-chg-pos">↑ +0,81%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget -->
+    <div class="hero-widget anim-3">
+      <div class="widget-chrome">
+        <div class="wdot" style="background:#8C2A1F;opacity:.5"></div>
+        <div class="wdot" style="background:#9B6E15;opacity:.5"></div>
+        <div class="wdot" style="background:#2D6A3C;opacity:.5"></div>
+        <span class="widget-title">InvestAI · análise em tempo real</span>
+        <span class="live-badge"><span class="live-dot"></span> Ao vivo</span>
+      </div>
+      <div class="widget-body">
+        <div class="widget-ticker">
+          <div>
+            <div style="display:flex;align-items:center;gap:.4rem">
+              <span class="widget-sym">PETR4</span>
+              <span class="widget-score">Score 72</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:.35rem;margin-top:.25rem">
+              <span class="widget-price">R$ 38,42</span>
+              <span class="widget-chg">+2,14%</span>
+            </div>
+            <div class="widget-name">Petróleo Brasileiro S.A.</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:.6rem;color:var(--fg-muted)">Vol. 24h</div>
+            <div style="font-family:var(--font-mono);font-size:.72rem;font-weight:600;color:var(--fg)">142M</div>
+          </div>
+        </div>
+
+        <div class="mini-chart">
+          <div class="chart-bar" style="height:40%"></div>
+          <div class="chart-bar" style="height:55%"></div>
+          <div class="chart-bar" style="height:47%"></div>
+          <div class="chart-bar" style="height:64%"></div>
+          <div class="chart-bar" style="height:58%"></div>
+          <div class="chart-bar" style="height:71%"></div>
+          <div class="chart-bar" style="height:80%"></div>
+        </div>
+
+        <div class="indicator-grid">
+          <div class="ind-card">
+            <div class="ind-label">RSI 14</div>
+            <div class="ind-val">58,2</div>
+            <div class="ind-sig" style="color:var(--yellow)">Neutro</div>
+          </div>
+          <div class="ind-card">
+            <div class="ind-label">MACD</div>
+            <div class="ind-val">+0,34</div>
+            <div class="ind-sig" style="color:var(--green)">Alta</div>
+          </div>
+          <div class="ind-card">
+            <div class="ind-label">EMA 20</div>
+            <div class="ind-val">37,80</div>
+            <div class="ind-sig" style="color:var(--primary)">Acima</div>
+          </div>
+        </div>
+
+        <div class="scenarios">
+          <div class="scenario-row">
+            <span class="scenario-label">Cenário altista</span>
+            <div class="scenario-bar"><div class="scenario-fill" style="width:62%;background:var(--green)"></div></div>
+            <span class="scenario-pct" style="color:var(--green)">62%</span>
+          </div>
+          <div class="scenario-row">
+            <span class="scenario-label">Cenário neutro</span>
+            <div class="scenario-bar"><div class="scenario-fill" style="width:24%;background:var(--yellow)"></div></div>
+            <span class="scenario-pct" style="color:var(--yellow)">24%</span>
+          </div>
+          <div class="scenario-row">
+            <span class="scenario-label">Cenário baixista</span>
+            <div class="scenario-bar"><div class="scenario-fill" style="width:14%;background:var(--red)"></div></div>
+            <span class="scenario-pct" style="color:var(--red)">14%</span>
+          </div>
+        </div>
+
+        <div class="ai-card">
+          <div class="ai-avatar">IA</div>
+          <p class="ai-text">
+            <strong style="color:var(--fg)">PETR4 apresenta sinais moderados de alta.</strong>
+            MACD acima do sinal, preço acima da EMA20. Prob. de continuação:
+            <strong style="color:var(--green)">62%</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="editorial-rule"></div>
+<div style="max-width:1200px;margin:0 auto;padding:.8rem 2.5rem">
+  <div class="editorial-rule-bold"></div>
+</div>
+
+<!-- ══ SCORE ENGINE ─────────────────────── -->
+<section class="score-section">
+  <div class="score-inner">
+    <div class="score-header anim-1">
+      <div class="section-tag">Motor proprietário</div>
+      <h2>Score InvestAI</h2>
+      <p>Cada ativo recebe uma nota de 0 a 100 calculada em tempo real, com quatro dimensões ponderadas por rigor quantitativo.</p>
+    </div>
+
+    <div class="score-grid">
+      <div class="donut-wrap">
+        <div class="donut-svg-wrap">
+          <svg width="210" height="210" viewBox="0 0 210 210">
+            <circle cx="105" cy="105" r="78" fill="none" stroke="#C8BAA8" stroke-width="13"/>
+            <circle cx="105" cy="105" r="78" fill="none" stroke="#8C1F3F" stroke-width="13"
+              stroke-dasharray="172 318" stroke-dashoffset="-80" stroke-linecap="round"/>
+            <circle cx="105" cy="105" r="78" fill="none" stroke="#2D6A3C" stroke-width="13"
+              stroke-dasharray="147 343" stroke-dashoffset="-260" stroke-linecap="round"/>
+            <circle cx="105" cy="105" r="78" fill="none" stroke="#8C1F3F" stroke-width="13"
+              stroke-dasharray="98 392" stroke-dashoffset="-416" stroke-linecap="round" opacity=".35"/>
+            <circle cx="105" cy="105" r="78" fill="none" stroke="#B0A498" stroke-width="13"
+              stroke-dasharray="73 417" stroke-dashoffset="-523" stroke-linecap="round"/>
+          </svg>
+          <div class="donut-label">
+            <div class="donut-label-title">Score</div>
+            <div class="donut-label-sub">0 – 100</div>
+          </div>
+        </div>
+        <div class="confidence-row">
+          <div class="conf-badge">
+            <div class="conf-range" style="color:var(--green)">≥ 65</div>
+            <div class="conf-sub">Alta confiança</div>
+          </div>
+          <div class="conf-badge">
+            <div class="conf-range" style="color:var(--yellow)">45–64</div>
+            <div class="conf-sub">Média</div>
+          </div>
+          <div class="conf-badge">
+            <div class="conf-range" style="color:var(--red)">< 45</div>
+            <div class="conf-sub">Baixa</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dim-list">
+        <div class="dim-card">
+          <div class="dim-header">
+            <div style="display:flex;align-items:center">
+              <div class="dim-dot" style="background:#8C1F3F"></div>
+              <span class="dim-name">Força Técnica</span>
+            </div>
+            <span class="dim-pct" style="color:#8C1F3F">35%</span>
+          </div>
+          <div class="dim-bar-track"><div class="dim-bar-fill" style="width:35%;background:#8C1F3F"></div></div>
+          <div class="dim-desc">RSI, MACD, EMAs, SMA200</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-header">
+            <div style="display:flex;align-items:center">
+              <div class="dim-dot" style="background:#A8354F"></div>
+              <span class="dim-name">Qualidade Fundamentalista</span>
+            </div>
+            <span class="dim-pct" style="color:#8C1F3F">30%</span>
+          </div>
+          <div class="dim-bar-track"><div class="dim-bar-fill" style="width:30%;background:#A8354F"></div></div>
+          <div class="dim-desc">ROE, P/L, P/VP, margens</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-header">
+            <div style="display:flex;align-items:center">
+              <div class="dim-dot" style="background:#2D6A3C"></div>
+              <span class="dim-name">Risco &amp; Volatilidade</span>
+            </div>
+            <span class="dim-pct" style="color:#8C1F3F">20%</span>
+          </div>
+          <div class="dim-bar-track"><div class="dim-bar-fill" style="width:20%;background:#2D6A3C"></div></div>
+          <div class="dim-desc">ATR, drawdown histórico</div>
+        </div>
+        <div class="dim-card">
+          <div class="dim-header">
+            <div style="display:flex;align-items:center">
+              <div class="dim-dot" style="background:#B0A498"></div>
+              <span class="dim-name">Dividendos</span>
+            </div>
+            <span class="dim-pct" style="color:#8C1F3F">15%</span>
+          </div>
+          <div class="dim-bar-track"><div class="dim-bar-fill" style="width:15%;background:#B0A498"></div></div>
+          <div class="dim-desc">Dividend Yield e consistência</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div style="max-width:1200px;margin:2rem auto;padding:0 2.5rem">
+  <div class="palette-info">
+    <div class="palette-title">VARIAÇÃO C — EDITORIAL REFINADO (MODO CLARO) · REFERÊNCIA DE PALETA</div>
+    <div class="swatches">
+      <div class="swatch"><div class="swatch-color" style="background:#F3EDE0"></div><div class="swatch-hex">#F3EDE0</div><div class="swatch-name">Background</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E8DDD0"></div><div class="swatch-hex">#E8DDD0</div><div class="swatch-name">Card</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#C8BAA8"></div><div class="swatch-hex">#C8BAA8</div><div class="swatch-name">Border</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#1C1208"></div><div class="swatch-hex">#1C1208</div><div class="swatch-name">Foreground</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#8C1F3F"></div><div class="swatch-hex">#8C1F3F</div><div class="swatch-name">Bordeaux (primary)</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#2D6A3C"></div><div class="swatch-hex">#2D6A3C</div><div class="swatch-name">Green</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#8C2A1F"></div><div class="swatch-hex">#8C2A1F</div><div class="swatch-name">Red</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#9B6E15"></div><div class="swatch-hex">#9B6E15</div><div class="swatch-name">Yellow</div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#7A6E5E"></div><div class="swatch-hex">#7A6E5E</div><div class="swatch-name">Muted</div></div>
+    </div>
+    <p style="font-size:.7rem;color:#7A6E5E;margin-top:1rem;font-family:'Syne',sans-serif;line-height:1.7">
+      <strong style="color:#1C1208">Psicologia:</strong> Modo claro com creme/parchment referencia diretamente o Financial Times — o veículo de notícias financeiras mais respeitado do mundo.
+      A textura grain no fundo dá sensação tátil de papel premium. Bordeaux como acento é raro em fintech — insinua maturidade e heritage sem arrogância.
+      Verde floresta e vermelho terracota mantêm os dados legíveis sem a agressividade de neon.
+      <strong style="color:#8C1F3F">Diferenciador competitivo:</strong> Nenhum concorrente brasileiro usa modo claro editorial como identidade primária.
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Syne, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "sonner";
 import { QueryProvider } from "@/providers/query-provider";
 import "./globals.css";
 
-const inter = Inter({
+const fraunces = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz"],
+});
+
+const syne = Syne({
   variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
@@ -43,7 +50,7 @@ export default function RootLayout({
     <ClerkProvider>
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${jetbrainsMono.variable} dark`}
+      className={`${fraunces.variable} ${syne.variable} ${jetbrainsMono.variable} dark`}
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-background text-foreground antialiased">

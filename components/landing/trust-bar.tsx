@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useInView } from "framer-motion";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 
 interface StatItem {
   value: number;
@@ -21,45 +21,51 @@ function AnimatedNumber({ target, suffix, prefix = "" }: { target: number; suffi
   const [current, setCurrent] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true });
+  const reduced = useReducedMotion();
 
   useEffect(() => {
     if (!inView) return;
-    const duration = 1800;
+    if (reduced) { setCurrent(target); return; }
+    const duration = 1600;
     const steps = 60;
     const increment = target / steps;
     let count = 0;
     const timer = setInterval(() => {
       count += increment;
-      if (count >= target) {
-        setCurrent(target);
-        clearInterval(timer);
-      } else {
-        setCurrent(Math.floor(count));
-      }
+      if (count >= target) { setCurrent(target); clearInterval(timer); }
+      else { setCurrent(Math.floor(count)); }
     }, duration / steps);
     return () => clearInterval(timer);
-  }, [inView, target]);
+  }, [inView, target, reduced]);
 
   return (
     <span ref={ref} className="tabular-nums">
-      {prefix}{current >= 1000 ? (current / 1000).toFixed(1) + "k" : current}
-      {suffix}
+      {prefix}{current >= 1000 ? (current / 1000).toFixed(1) + "k" : current}{suffix}
     </span>
   );
 }
 
 export function TrustBar() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+
   return (
-    <section className="border-y border-border/40 bg-surface/40 py-10">
+    <section ref={ref} className="border-y border-border/40 bg-surface/40 py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="text-center">
+          {STATS.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 14 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.45, delay: i * 0.09, ease: [0.22, 1, 0.36, 1] }}
+              className="text-center"
+            >
               <div className="text-2xl sm:text-3xl font-bold font-mono-nums text-foreground">
                 <AnimatedNumber target={stat.value} suffix={stat.suffix} prefix={stat.prefix} />
               </div>
               <div className="mt-1 text-xs text-muted-foreground">{stat.label}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
 

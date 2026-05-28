@@ -4,6 +4,13 @@ import { useState } from "react";
 import { LandingNavbar } from "@/components/landing/navbar";
 import { LandingHero } from "@/components/landing/hero";
 import { TrustBar } from "@/components/landing/trust-bar";
+import { ScoreEngine } from "@/components/landing/score-engine";
+import { TechnicalIndicators } from "@/components/landing/technical-indicators";
+import { AssetClasses } from "@/components/landing/asset-classes";
+import { DataSources } from "@/components/landing/data-sources";
+import { ProbabilisticAnalysis } from "@/components/landing/probabilistic-analysis";
+import { InvestorProfiles } from "@/components/landing/investor-profiles";
+import { Transparency } from "@/components/landing/transparency";
 import { FeaturesTabs } from "@/components/landing/features-tabs";
 import { Simulator } from "@/components/landing/simulator";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
@@ -29,28 +36,49 @@ export default function HomePage() {
         {/* 3. Trust bar — prova social imediata, contadores animados */}
         <TrustBar />
 
-        {/* 4. Features com tabs — mostra o produto de forma interativa */}
+        {/* 4. Score engine — motor proprietário, donut animado */}
+        <ScoreEngine />
+
+        {/* 5. 10 indicadores técnicos — grid com tags e "0ms latência" */}
+        <TechnicalIndicators />
+
+        {/* 6. 9 classes de ativos — accordion expandível com risk dots */}
+        <AssetClasses />
+
+        {/* 7. Análise probabilística — 3 cenários com barras animadas */}
+        <ProbabilisticAnalysis />
+
+        {/* 8. Fontes de dados — Brapi, Yahoo, BCB com frequências */}
+        <DataSources />
+
+        {/* 9. 10 perfis de investidor — grid interativo */}
+        <InvestorProfiles />
+
+        {/* 10. Features com tabs — mostra o produto de forma interativa */}
         <FeaturesTabs />
 
-        {/* 5. Simulador — killer feature de conversão, mostra valor concreto */}
+        {/* 11. Simulador — killer feature de conversão */}
         <Simulator />
 
-        {/* 6. Como funciona — remove objeção de complexidade */}
+        {/* 12. Como funciona — remove objeção de complexidade */}
         <LandingHowItWorks />
 
-        {/* 7. Depoimentos — prova social qualitativa */}
+        {/* 13. Depoimentos — prova social qualitativa */}
         <Testimonials />
 
-        {/* 8. Preços — depois de mostrar valor, apresentar custo */}
+        {/* 14. Capacidades e limitações — honestidade radical */}
+        <Transparency />
+
+        {/* 15. Preços — depois de mostrar valor, apresentar custo */}
         <LandingPricing />
 
-        {/* 9. FAQ — remove objeções finais antes da decisão */}
+        {/* 16. FAQ — remove objeções finais antes da decisão */}
         <FAQ />
 
-        {/* 10. CTA final — reforço e conversão */}
+        {/* 17. CTA final — reforço e conversão */}
         <FinalCTA onLoginOpen={() => setLoginOpen(true)} />
 
-        {/* 11. Footer */}
+        {/* 18. Footer */}
         <LandingFooter />
       </main>
 

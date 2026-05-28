@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hero V1 — Autoridade Técnica</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #080808; --bg-surface: #111111; --bg-card: #141414;
+      --border: #232323; --border-hi: #333333;
+      --fg: #FAFAFA; --fg-muted: #636363; --fg-dim: #282828;
+      --primary: #A0714F; --primary-hi: #C08868;
+      --green: #22C55E; --red: #EF4444; --yellow: #EAB308;
+      --font-display: 'Fraunces', serif;
+      --font-sans: 'Syne', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    html { font-family: var(--font-sans); background: var(--bg); color: var(--fg); }
+    h1, h2, h3 { font-family: var(--font-display); }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px);} to {opacity:1; transform:translateY(0);} }
+    @keyframes fadeIn { from { opacity:0;} to {opacity:1;} }
+    @keyframes barFill { from { width: 0; } }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    nav {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 2.5rem; height:52px; border-bottom:1px solid var(--border);
+      background:rgba(8,8,8,.95); position:sticky; top:0; z-index:50;
+      backdrop-filter:blur(10px);
+    }
+    .logo { font-family:var(--font-mono); font-size:.85rem; font-weight:700; color:var(--fg); letter-spacing:.08em; text-transform:uppercase; }
+    .logo span { color:var(--primary); }
+    .nav-links { display:flex; gap:2rem; font-size:.75rem; color:var(--fg-muted); font-family:var(--font-mono); }
+    .nav-links a { text-decoration:none; color:inherit; }
+    .nav-cta { padding:.38rem 1rem; background:var(--primary); color:var(--bg); border:none; cursor:pointer; font-family:var(--font-mono); font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; border-radius:4px; }
+
+    .hero {
+      max-width:1200px; margin:0 auto; padding:6rem 2.5rem 5rem;
+      display:grid; grid-template-columns:1fr 420px; gap:5rem; align-items:start;
+    }
+    @media(max-width:900px){ .hero{grid-template-columns:1fr; padding:4rem 1.5rem;} .hero-right{display:none;} }
+
+    .tag {
+      display:inline-flex; align-items:center; gap:.45rem;
+      border:1px solid var(--border); padding:.3rem .85rem;
+      font-family:var(--font-mono); font-size:.65rem; font-weight:700;
+      color:var(--fg-muted); letter-spacing:.1em; text-transform:uppercase;
+      margin-bottom:2.2rem; border-radius:3px;
+      animation: fadeUp .4s cubic-bezier(0.22,1,0.36,1) .05s both;
+    }
+    .tag-dot { width:5px; height:5px; border-radius:50%; background:var(--primary); animation:blink 1.8s step-end infinite; }
+
+    h1 {
+      font-size:clamp(2.8rem, 5.5vw, 4.2rem); font-weight:700;
+      line-height:1.06; letter-spacing:-.04em; color:var(--fg);
+      margin-bottom:.5rem;
+      animation: fadeUp .55s cubic-bezier(0.22,1,0.36,1) .15s both;
+    }
+    .h1-line2 { display:block; color:var(--primary); }
+    .h1-line3 { display:block; font-weight:300; font-style:italic; color:var(--fg-muted); }
+
+    .indicators-row {
+      display:flex; flex-wrap:wrap; gap:.5rem; margin:1.6rem 0 2rem;
+      animation: fadeUp .45s cubic-bezier(0.22,1,0.36,1) .28s both;
+    }
+    .ind-tag {
+      font-family:var(--font-mono); font-size:.62rem; font-weight:600;
+      border:1px solid var(--border-hi); color:var(--fg-muted);
+      padding:.2rem .6rem; border-radius:3px; letter-spacing:.06em;
+    }
+    .ind-tag.active { border-color:var(--primary); color:var(--primary); background:rgba(160,113,79,.08); }
+
+    .sub {
+      font-size:.93rem; color:var(--fg-muted); line-height:1.7; max-width:500px;
+      animation: fadeUp .45s cubic-bezier(0.22,1,0.36,1) .32s both;
+    }
+
+    .cta-row {
+      display:flex; align-items:center; gap:1rem; margin-top:2.5rem; flex-wrap:wrap;
+      animation: fadeUp .45s cubic-bezier(0.22,1,0.36,1) .42s both;
+    }
+    .btn-primary {
+      display:inline-flex; align-items:center; gap:.5rem;
+      padding:.7rem 1.6rem; background:var(--primary); color:var(--bg);
+      border:none; cursor:pointer; font-family:var(--font-mono);
+      font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+      border-radius:5px; transition:background .15s;
+    }
+    .btn-primary:hover { background:var(--primary-hi); }
+    .cta-note { font-family:var(--font-mono); font-size:.65rem; color:var(--fg-muted); letter-spacing:.04em; }
+
+    /* Right: terminal widget */
+    .hero-right { animation: fadeIn .6s ease .6s both; }
+    .terminal {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:10px; overflow:hidden;
+      box-shadow:0 0 0 1px rgba(160,113,79,.07), 0 24px 48px rgba(0,0,0,.6);
+    }
+    .term-bar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:.6rem 1rem; background:var(--bg-surface); border-bottom:1px solid var(--border);
+    }
+    .term-dots { display:flex; gap:.35rem; }
+    .term-dot { width:8px; height:8px; border-radius:50%; }
+    .dot-r{background:#EF444440;} .dot-y{background:#EAB30840;} .dot-g{background:#22C55E40;}
+    .term-title { font-family:var(--font-mono); font-size:.62rem; color:var(--fg-muted); letter-spacing:.08em; }
+
+    .term-body { padding:1.2rem 1rem; }
+    .term-ticker {
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:1.2rem; padding-bottom:1rem; border-bottom:1px solid var(--border);
+    }
+    .tick-name { font-family:var(--font-mono); font-size:.7rem; color:var(--fg-muted); letter-spacing:.08em; }
+    .tick-price { font-family:var(--font-mono); font-size:1.4rem; font-weight:700; color:var(--fg); }
+    .tick-change { font-family:var(--font-mono); font-size:.72rem; font-weight:700; color:var(--green); }
+
+    .score-block { margin-bottom:1.2rem; }
+    .score-label { display:flex; justify-content:space-between; margin-bottom:.5rem; }
+    .score-label span:first-child { font-family:var(--font-mono); font-size:.65rem; color:var(--fg-muted); letter-spacing:.06em; }
+    .score-value { font-family:var(--font-mono); font-size:.65rem; font-weight:700; color:var(--primary); }
+    .score-bar { height:4px; background:var(--border); border-radius:2px; overflow:hidden; }
+    .score-fill { height:100%; background:var(--primary); border-radius:2px; animation: barFill 1.4s cubic-bezier(0.22,1,0.36,1) .9s both; }
+
+    .ind-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-top:1.2rem; }
+    .ind-cell {
+      background:var(--bg-surface); border:1px solid var(--border); border-radius:6px;
+      padding:.6rem .75rem;
+    }
+    .ind-name { font-family:var(--font-mono); font-size:.6rem; color:var(--fg-muted); letter-spacing:.06em; margin-bottom:.2rem; }
+    .ind-val { font-family:var(--font-mono); font-size:.85rem; font-weight:700; color:var(--fg); }
+    .ind-signal { font-family:var(--font-mono); font-size:.55rem; font-weight:700; letter-spacing:.06em; }
+    .sig-buy { color:var(--green); } .sig-sell { color:var(--red); } .sig-hold { color:var(--yellow); }
+
+    /* Direction label */
+    .direction {
+      margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border);
+      font-family:var(--font-mono); font-size:.62rem; color:var(--fg-muted);
+      text-align:center; letter-spacing:.06em;
+    }
+    .direction strong { color:var(--fg); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Invest<span>AI</span></div>
+  <div class="nav-links">
+    <a href="#">Funcionalidades</a>
+    <a href="#">Dados</a>
+    <a href="#">Preços</a>
+  </div>
+  <button class="nav-cta">Entrar</button>
+</nav>
+
+<section>
+  <div class="hero">
+    <!-- Left -->
+    <div>
+      <div class="tag">
+        <span class="tag-dot"></span>
+        Análise técnica · Fundamentalista · IA
+      </div>
+
+      <h1>
+        RSI. Bollinger.<br>
+        <span class="h1-line2">Score proprietário.</span>
+        <span class="h1-line3">Tudo integrado.</span>
+      </h1>
+
+      <div class="indicators-row">
+        <span class="ind-tag active">RSI</span>
+        <span class="ind-tag active">MACD</span>
+        <span class="ind-tag active">Bollinger Bands</span>
+        <span class="ind-tag active">EMA 20/50</span>
+        <span class="ind-tag">Selic</span>
+        <span class="ind-tag">IPCA</span>
+        <span class="ind-tag">CDI</span>
+        <span class="ind-tag">+4 mais</span>
+      </div>
+
+      <p class="sub">
+        Score 0–100 calculado em tempo real. Dados de B3 (BRAPI), Yahoo Finance e Banco Central.
+        Cada número tem breakdown, cada breakdown tem explicação.
+      </p>
+
+      <div class="cta-row">
+        <button class="btn-primary">
+          Analisar meu primeiro ativo →
+        </button>
+        <span class="cta-note">Gratuito · Sem cartão · B3 + global</span>
+      </div>
+    </div>
+
+    <!-- Right: terminal -->
+    <div class="hero-right">
+      <div class="terminal">
+        <div class="term-bar">
+          <div class="term-dots">
+            <div class="term-dot dot-r"></div>
+            <div class="term-dot dot-y"></div>
+            <div class="term-dot dot-g"></div>
+          </div>
+          <div class="term-title">ANÁLISE · PETR4</div>
+          <div class="term-title" style="color:var(--green)">● AO VIVO</div>
+        </div>
+        <div class="term-body">
+          <div class="term-ticker">
+            <div>
+              <div class="tick-name">PETR4 · PETROBRAS ON N2</div>
+              <div class="tick-price">R$ 38,47</div>
+            </div>
+            <div style="text-align:right">
+              <div class="tick-change">▲ +1,24%</div>
+              <div class="tick-name" style="margin-top:.2rem">Pregão B3</div>
+            </div>
+          </div>
+
+          <div class="score-block">
+            <div class="score-label">
+              <span>SCORE GERAL</span>
+              <span class="score-value">72 / 100</span>
+            </div>
+            <div class="score-bar"><div class="score-fill" style="width:72%"></div></div>
+          </div>
+          <div class="score-block">
+            <div class="score-label">
+              <span>FORÇA TÉCNICA</span>
+              <span class="score-value" style="color:var(--green)">81%</span>
+            </div>
+            <div class="score-bar"><div class="score-fill" style="width:81%; background:var(--green)"></div></div>
+          </div>
+          <div class="score-block">
+            <div class="score-label">
+              <span>QUALIDADE FUNDAMENTALISTA</span>
+              <span class="score-value" style="color:var(--yellow)">64%</span>
+            </div>
+            <div class="score-bar"><div class="score-fill" style="width:64%; background:var(--yellow)"></div></div>
+          </div>
+
+          <div class="ind-grid">
+            <div class="ind-cell">
+              <div class="ind-name">RSI (14)</div>
+              <div class="ind-val">58,3</div>
+              <div class="ind-signal sig-buy">NEUTRO →</div>
+            </div>
+            <div class="ind-cell">
+              <div class="ind-name">MACD</div>
+              <div class="ind-val">+0,42</div>
+              <div class="ind-signal sig-buy">COMPRA ↑</div>
+            </div>
+            <div class="ind-cell">
+              <div class="ind-name">BB posição</div>
+              <div class="ind-val">Média</div>
+              <div class="ind-signal sig-hold">NEUTRO →</div>
+            </div>
+            <div class="ind-cell">
+              <div class="ind-name">EMA 20</div>
+              <div class="ind-val">37,92</div>
+              <div class="ind-signal sig-buy">ACIMA ↑</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="direction">
+        Dados via <strong>BRAPI.DEV · B3 Oficial</strong> &nbsp;·&nbsp; Atualizado 30s
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Direction label at bottom -->
+<div style="max-width:1200px; margin:0 auto; padding:2rem 2.5rem 3rem; border-top:1px solid var(--border)">
+  <p style="font-family:var(--font-mono); font-size:.65rem; color:var(--fg-muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:.5rem;">V1 — AUTORIDADE TÉCNICA</p>
+  <p style="font-size:.8rem; color:var(--fg-muted); line-height:1.6; max-width:600px;">
+    <strong style="color:var(--fg)">Tom:</strong> O assistente sabe tudo que precisa ser sabido. Nomenclatura técnica aparece desde o primeiro segundo — RSI, MACD, Bollinger Bands. A credibilidade vem dos dados, não das promessas. CTA é direto e ativo: "Analisar meu primeiro ativo →"
+  </p>
+</div>
+
+</body>
+</html>

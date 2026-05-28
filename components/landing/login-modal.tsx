@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useSignIn } from "@clerk/nextjs";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, ArrowRight, TrendingUp, Eye, EyeOff } from "lucide-react";
+import { X, Mail, ArrowRight, TrendingUp, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -29,9 +30,23 @@ export function LoginModal({ open, onClose }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const { signIn } = useSignIn();
 
   const reset = () => { setMode("options"); setEmail(""); setPassword(""); };
   const handleClose = () => { reset(); onClose(); };
+
+  const handleGoogle = useCallback(async () => {
+    if (!signIn) return;
+    setGoogleLoading(true);
+    const { error: ssoError } = await signIn.sso({
+      strategy: "oauth_google",
+      redirectUrl: "/sso-callback",
+      redirectCallbackUrl: "/dashboard",
+    });
+    if (ssoError) setGoogleLoading(false);
+  }, [signIn]);
 
   return (
     <AnimatePresence>
@@ -87,8 +102,12 @@ export function LoginModal({ open, onClose }: Props) {
                       </p>
 
                       {/* Google */}
-                      <button className="flex w-full items-center justify-center gap-3 rounded-xl border border-border/60 bg-background px-4 py-3 text-sm font-medium hover:bg-muted/60 transition-all active:scale-[0.98]">
-                        <GoogleIcon />
+                      <button
+                        onClick={handleGoogle}
+                        disabled={googleLoading || !signIn}
+                        className="flex w-full items-center justify-center gap-3 rounded-xl border border-border/60 bg-background px-4 py-3 text-sm font-medium hover:bg-muted/60 transition-all active:scale-[0.98] disabled:opacity-50"
+                      >
+                        {googleLoading ? <Loader2 size={16} className="animate-spin" /> : <GoogleIcon />}
                         Continuar com Google
                       </button>
 
