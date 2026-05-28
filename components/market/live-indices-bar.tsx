@@ -50,11 +50,11 @@ export function LiveIndicesBar({ initialData, className }: LiveIndicesBarProps) 
   return (
     <div className={className}>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {displayItems.map((item) => {
+        {displayItems.map((item, index) => {
           const positive = item.changePercent > 0;
           const neutral = item.changePercent === 0;
           return (
-            <div key={item.symbol} className="rounded-xl border border-border/50 bg-card p-4">
+            <div key={`${item.symbol}-${index}`} className="rounded-xl border border-border/50 bg-card p-4">
               <p className="text-xs text-muted-foreground">{item.name}</p>
               <p className="mt-1 text-base font-bold font-mono-nums">
                 {item.symbol === "SELIC"
