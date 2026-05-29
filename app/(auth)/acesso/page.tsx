@@ -83,16 +83,16 @@ export default function AcessoPage() {
   const handleGoogle = useCallback(async () => {
     if (!signIn) return;
     setLoading(true);
-    const { error: ssoError } = await signIn.sso({
-      strategy: "oauth_google",
-      redirectUrl: "/sso-callback",
-      redirectCallbackUrl: tab === "cadastrar" ? "/onboarding" : "/dashboard",
-    });
-    if (ssoError) {
-      setError(clerkError(ssoError));
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: "oauth_google",
+        redirectUrl: "/sso-callback",
+        redirectCallbackUrl: tab === "cadastrar" ? "/onboarding" : "/dashboard",
+      });
+    } catch (err: any) {
+      setError(clerkError(err));
       setLoading(false);
     }
-    // On success the browser is redirected — no cleanup needed
   }, [signIn, tab]);
 
   /* ── Login com email ────────────────────────────── */
@@ -102,18 +102,20 @@ export default function AcessoPage() {
     setLoading(true);
     clearError();
 
-    const { error: createError } = await signIn.create({ identifier: email });
-    if (createError) { setError(clerkError(createError)); setLoading(false); return; }
+    try {
+      const result = await signIn.create({
+        identifier: email,
+        password,
+      });
 
-    const { error: passError } = await signIn.password({ password });
-    if (passError) { setError(clerkError(passError)); setLoading(false); return; }
-
-    if (signIn.status === "complete") {
-      const { error: finalError } = await signIn.finalize();
-      if (finalError) { setError(clerkError(finalError)); setLoading(false); return; }
-      router.push("/dashboard");
-    } else {
-      setError("Algo deu errado. Tente novamente.");
+      if (result.status === "complete") {
+        router.push("/dashboard");
+      } else {
+        setError("Algo deu errado. Tente novamente.");
+      }
+    } catch (err: any) {
+      setError(clerkError(err));
+    } finally {
       setLoading(false);
     }
   }, [signIn, email, password, router]);
@@ -125,22 +127,22 @@ export default function AcessoPage() {
     setLoading(true);
     clearError();
 
-    const [firstName, ...rest] = name.trim().split(" ");
-    const { error: createError } = await signUp.create({
-      emailAddress: email,
-      firstName,
-      lastName: rest.join(" ") || undefined,
-    });
-    if (createError) { setError(clerkError(createError)); setLoading(false); return; }
+    try {
+      const [firstName, ...rest] = name.trim().split(" ");
+      await signUp.create({
+        emailAddress: email,
+        password,
+        firstName,
+        lastName: rest.join(" ") || undefined,
+      });
 
-    const { error: passError } = await signUp.password({ password });
-    if (passError) { setError(clerkError(passError)); setLoading(false); return; }
-
-    const { error: sendError } = await signUp.verifications.sendEmailCode();
-    if (sendError) { setError(clerkError(sendError)); setLoading(false); return; }
-
-    setStep("verify");
-    setLoading(false);
+      await signUp.verifications.sendEmailCode();
+      setStep("verify");
+    } catch (err: any) {
+      setError(clerkError(err));
+    } finally {
+      setLoading(false);
+    }
   }, [signUp, name, email, password]);
 
   /* ── Verificar código de e-mail ─────────────────── */
@@ -351,14 +353,17 @@ export default function AcessoPage() {
                   loading={loading} error={error}
                 />
               ) : (
-                <SignUpForm
-                  name={name} setName={setName}
-                  email={email} setEmail={setEmail}
-                  password={password} setPassword={setPassword}
-                  showPass={showPass} setShowPass={setShowPass}
-                  onSubmit={handleSignUp}
-                  loading={loading} error={error}
-                />
+                <>
+                  <div id="clerk-captcha" />
+                  <SignUpForm
+                    name={name} setName={setName}
+                    email={email} setEmail={setEmail}
+                    password={password} setPassword={setPassword}
+                    showPass={showPass} setShowPass={setShowPass}
+                    onSubmit={handleSignUp}
+                    loading={loading} error={error}
+                  />
+                </>
               )}
 
               <p className="text-center text-xs text-muted-foreground">
